@@ -1,4 +1,1 @@
-DTU-Times
-=========
-
-The android app for DTU Times
+The Android App for DTU Times!
