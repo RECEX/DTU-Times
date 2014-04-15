@@ -3,6 +3,8 @@ package in.co.recex.dtutimes.app;
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
@@ -10,7 +12,9 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ArrayAdapter;
 import android.widget.ImageView;
+import android.widget.ListView;
 import android.widget.TextView;
 
 import com.androidquery.AQuery;
@@ -25,11 +29,10 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.util.ArrayList;
+import java.io.File;
 import java.util.List;
 
 import it.gmariotti.cardslib.library.internal.Card;
-import it.gmariotti.cardslib.library.internal.CardArrayAdapter;
 import it.gmariotti.cardslib.library.view.CardListView;
 
 
@@ -40,7 +43,6 @@ import it.gmariotti.cardslib.library.view.CardListView;
  * to handle interaction events.
  * Use the {@link FacebookFeedFragment#newInstance} factory method to
  * create an instance of this fragment.
- *
  */
 public class FacebookFeedFragment extends Fragment {
     // TODO: Rename parameter arguments, choose names that match
@@ -55,6 +57,7 @@ public class FacebookFeedFragment extends Fragment {
     private OnFragmentInteractionListener mListener;
 
     private CardListView cardListView;
+    private ListView feedCardListView;
 
     private int ifLog;
 
@@ -63,29 +66,27 @@ public class FacebookFeedFragment extends Fragment {
     List<String> feedStringArray;
     private JSONArray dataJsonArray;
 
-    private void listFacebookFeed(){
+    private List<JSONObject> Jsonlist;
+
+    private void listFacebookFeed() {
 
         Bundle bundle = new Bundle();
-        bundle.putString("fields","feed.fields(type,message,caption,name,full_picture,link)");
-        if (Session.getActiveSession().getState()== SessionState.OPENED) {
-            request = new Request(Session.getActiveSession(), "dtutimes",bundle, HttpMethod.GET,new Request.Callback() {
+        bundle.putString("fields", "feed.fields(type,message,caption,name,full_picture,link)");
+        if (Session.getActiveSession().getState() == SessionState.OPENED) {
+            request = new Request(Session.getActiveSession(), "dtutimes", bundle, HttpMethod.GET, new Request.Callback() {
 
 
                 @Override
                 public void onCompleted(Response response) {
-                    if(ifLog==1){
-                        Log.d("listFacebookFeed - OnCompleted", "Reaching here!");
-                    }
-                    if (response.getError()!=null){
+
+                    if (response.getError() != null) {
                         //TODO: add error handling code here
-                        Log.e("listFacebookFeed - OnCompleted",response.getError().toString());
-                    }
-                    else {
-                        if(response.getGraphObject()==null){
+                        Log.e("listFacebookFeed - OnCompleted", response.getError().toString());
+                    } else {
+                        if (response.getGraphObject() == null) {
                             //TODO: add error handling code here
                             Log.e("listFacebookFeed - OnCompleted", "GraphObject null");
-                        }
-                        else {
+                        } else {
                             GraphObject graphObject = response.getGraphObject();
                             JSONObject feedJsonObject = (JSONObject) graphObject.getProperty("feed");
 
@@ -94,7 +95,7 @@ public class FacebookFeedFragment extends Fragment {
                             } catch (JSONException e) {
                                 e.printStackTrace();
                             }
-                            if (ifLog==1) {
+                            if (ifLog == 1) {
                                 Log.d("dataJsonArray", dataJsonArray.toString());
                             }
                             //TODO: Remove the code below later on..
@@ -119,15 +120,19 @@ public class FacebookFeedFragment extends Fragment {
                                 }
 
                             }*/
-                            initializeListView();
+                            try {
+                                initializeListView();
+                            } catch (JSONException e) {
+                                e.printStackTrace();
+                            }
                         }
                     }
                 }
             });
-        }else {
+        } else {
             //go back to login screen
-            if (ifLog==1)
-                Log.e("listFacebookFeed","Session isnt active bitch.");
+            if (ifLog == 1)
+                Log.e("listFacebookFeed", "Session isnt active bitch.");
             Intent intent = new Intent(getActivity(), FbLoginActivity.class);
             getActivity().startActivity(intent);
         }
@@ -135,9 +140,9 @@ public class FacebookFeedFragment extends Fragment {
         request.executeAsync();
     }
 
-    private void initializeListView() {
+    private void initializeListView() throws JSONException {
         //TODO: instantiate adapter, and set adapter to view here
-        ArrayList<Card> cardList = new ArrayList<Card>();
+        /*final ArrayList<Card> cardList = new ArrayList<Card>();
         for (int i =0; i< dataJsonArray.length();i++){
             JSONObject jsonObject=null;
             try {
@@ -155,33 +160,66 @@ public class FacebookFeedFragment extends Fragment {
             if (card!=null)
                 cardList.add(card);
 
-        }
 
-        CardArrayAdapter cardArrayAdapter = new CardArrayAdapter(getActivity(),cardList){
-            AQuery listAq = new AQuery(getActivity());
-            @Override
-            public View getView(int position, View convertView, ViewGroup parent) {
 
-                convertView= super.getView(position, convertView, parent);
-                //TODO: add the image finding functionality here
 
-                    try {
-                        if (dataJsonArray.getJSONObject(position).has("full_picture")) {
-                            // TODO: load photo from link onto facebookImageView using androidQuery here.
-                            AQuery aq = listAq.recycle(convertView);
-                            ImageView imageView = (ImageView) convertView.findViewById(R.id.feedImageView);
-                            imageView.setVisibility(View.VISIBLE);
-                            aq.id(R.id.feedImageView).progress(R.id.com_facebook_login_activity_progress_bar).visible().image(dataJsonArray.getJSONObject(position).getString("full_picture"), true, true, 0, 0, null, AQuery.FADE_IN_NETWORK, 1.0f);
-                        }
-                    } catch (JSONException e) {
-                        e.printStackTrace();
-                    }
-
-                return convertView;
-            }
-        };
+        CardArrayAdapter cardArrayAdapter = new CardArrayAdapter(getActivity(),cardList);
         if (cardListView!=null)
             cardListView.setAdapter(cardArrayAdapter);
+            */
+
+
+        ArrayAdapter<JSONObject> listAdapter = new ArrayAdapter<JSONObject>(getActivity(), R.layout.facebook_feed_fragment_list_item) {
+            @Override
+            public View getView(int position, View convertView, ViewGroup parent) {
+                // return super.getView(position, convertView, parent);
+                convertView = getActivity().getLayoutInflater().inflate(R.layout.facebook_feed_fragment_list_item, null);
+                JSONObject item = getItem(position);
+
+                AQuery aQuery = listAQ.recycle(convertView);
+                aQuery.id(R.id.feedItemType).text(item.optString("type"));
+                if (item.has("full_picture"))
+                    aQuery.progress(R.id.progress_circular).id(R.id.feedImageView).image(item.optString("full_picture"), true, true, 300, 0, null, AQuery.FADE_IN_NETWORK, 1.0f);
+
+                String type = item.optString("type");
+                String message = item.optString("message");
+                String caption = item.optString("caption");
+                String link = item.optString("link");
+                String name = item.optString("name");
+
+                if (type.equals("link")) {
+                    //TODO: setup code to get onclick listener
+                    aQuery.id(R.id.feedItemType).text("Link"); //type text view
+                    if (name != null) {
+                        aQuery.id(R.id.feedMessage).text(name);
+                    }
+                }
+
+                if (type.equals("status")) {
+                    if (message != null) {
+                        aQuery.id(R.id.feedMessage).text(message);
+                    }
+                    aQuery.id(R.id.feedItemType).text("Status");
+                }
+
+                if (type.equals("photo")) {
+                    aQuery.id(R.id.feedItemType).text("Photo");
+                    if (caption != null) {
+                        aQuery.id(R.id.feedMessage).text(caption);
+                    }
+                }
+                return convertView;
+
+            }
+        };
+        for (int j = 0; j < dataJsonArray.length(); j++) {
+            if (dataJsonArray.optJSONObject(j) != null) {
+                if (!(dataJsonArray.optJSONObject(j).optString("type").equals("status") && (dataJsonArray.optJSONObject(j).optString("message") == null || dataJsonArray.optJSONObject(j).optString("message").equals(""))))
+                    listAdapter.add(dataJsonArray.getJSONObject(j));
+            }
+        }
+
+        feedCardListView.setAdapter(listAdapter);
 
     }
 
@@ -202,6 +240,7 @@ public class FacebookFeedFragment extends Fragment {
         fragment.setArguments(args);
         return fragment;
     }
+
     public FacebookFeedFragment() {
         // Required empty public constructor
     }
@@ -219,9 +258,9 @@ public class FacebookFeedFragment extends Fragment {
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         // Inflate the layout for this fragment
-        View view= inflater.inflate(R.layout.fragment_facebook_feed, container, false);
+        View view = inflater.inflate(R.layout.fragment_facebook_feed, container, false);
         if (view != null) {
-            cardListView = (CardListView) view.findViewById(R.id.feedCardListView);
+            feedCardListView = (ListView) view.findViewById(R.id.feedListView);
         }
         return view;
     }
@@ -253,7 +292,7 @@ public class FacebookFeedFragment extends Fragment {
      * fragment to allow an interaction in this fragment to be communicated
      * to the activity and potentially other fragments contained in that
      * activity.
-     * <p>
+     * <p/>
      * See the Android Training lesson <a href=
      * "http://developer.android.com/training/basics/fragments/communicating.html"
      * >Communicating with Other Fragments</a> for more information.
@@ -284,14 +323,16 @@ public class FacebookFeedFragment extends Fragment {
         protected String link;
         protected String name;
 
+        public File image;
+
         protected JSONObject cardData;
 
 
         public GooglePlaySmallCard(Context context, JSONObject jsonObject) {
-            this(context, R.layout.carddemo_mycard_inner_content,jsonObject);
+            this(context, R.layout.facebook_feed_fragment_list_item, jsonObject);
         }
 
-        public GooglePlaySmallCard(Context context, int innerLayout,JSONObject jsonObject) {
+        public GooglePlaySmallCard(Context context, int innerLayout, JSONObject jsonObject) {
             super(context, innerLayout);
             cardData = jsonObject;
             init();
@@ -302,11 +343,12 @@ public class FacebookFeedFragment extends Fragment {
 
             try {
 
-                type= cardData.getString("type");
+                type = cardData.getString("type");
                 if (cardData.has("message"))
                     message = cardData.getString("message");
-                if (cardData.has("caption"))
+                if (cardData.has("caption")) {
                     caption = cardData.getString("caption");
+                }
                 if (cardData.has("link"))
                     link = cardData.getString("link");
                 if (cardData.has("full_picture"))
@@ -324,7 +366,7 @@ public class FacebookFeedFragment extends Fragment {
         public void setupInnerViewElements(ViewGroup parent, View view) {
 
             //Retrieve elements
-            messageTextView = (TextView)parent.findViewById(R.id.feedMessage);
+            messageTextView = (TextView) parent.findViewById(R.id.feedMessage);
             typeTextView = (TextView) parent.findViewById(R.id.feedItemType);
             facebookImageView = (ImageView) parent.findViewById(R.id.feedImageView);
 
@@ -342,8 +384,6 @@ public class FacebookFeedFragment extends Fragment {
                 }*/
 
 
-
-
             if (type.equals("link")) {
                 if (link != null) {
                     setOnClickListener(new OnCardClickListener() {
@@ -355,31 +395,41 @@ public class FacebookFeedFragment extends Fragment {
                     });
                 }
                 typeTextView.setText("Link");
-                if (name!=null){
+                if (name != null) {
                     messageTextView.setText(name);
                 }
             }
 
-            if (type.equals("status")){
-                if (message!=null){
+            if (type.equals("status")) {
+                if (message != null) {
                     messageTextView.setText(message);
                 }
                 typeTextView.setText("Status");
             }
 
-            if (type.equals("photo")){
+            if (type.equals("photo")) {
                 typeTextView.setText("Photo");
-                if (caption!=null){
+                if (caption != null) {
                     messageTextView.setText(caption);
                 }
             }
-
+            if (facebookImageURL != null) {
+                // TODO: load photo from link onto facebookImageView using androidQuery here.
+                AQuery aQuery = new AQuery(getActivity());
+                facebookImageView.setVisibility(View.VISIBLE);
+                image = aQuery.getCachedFile(facebookImageURL);
+                while (image == null) {
+                }
+                Bitmap bitmap = BitmapFactory.decodeFile(image.getPath());
+                facebookImageView.setImageBitmap(bitmap);
+            }
 
         }
 
 
-
     }
+
+    AQuery listAQ = new AQuery(getActivity());
 
 
 }

@@ -1,18 +1,17 @@
 package in.co.recex.dtutimes.app;
 
 import android.app.Activity;
-import android.support.v7.app.ActionBarActivity;
-import android.support.v7.app.ActionBar;
+import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
-import android.os.Bundle;
+import android.support.v4.widget.DrawerLayout;
+import android.support.v7.app.ActionBar;
+import android.support.v7.app.ActionBarActivity;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
-import android.support.v4.widget.DrawerLayout;
-import android.widget.TextView;
 
 
 public class MainActivity extends ActionBarActivity
@@ -52,19 +51,19 @@ public class MainActivity extends ActionBarActivity
                 toChangeFragment = new FacebookFeedFragment();
                 break;
             case 1:
-                toChangeFragment = new FacebookFeedFragment();
+                toChangeFragment = new EditionsFragment();
                 break;
             case 2:
-                toChangeFragment = new OurTeamFragment();
+                toChangeFragment = new EditionsFragment();
                 break;
             case 3:
-                toChangeFragment = new OurTeamFragment();
+                toChangeFragment = new EditionsFragment();
                 break;
             case 4:
-                toChangeFragment = new OurTeamFragment();
+                toChangeFragment = new EditionsFragment();
                 break;
             default:
-                toChangeFragment = new FacebookFeedFragment();
+                toChangeFragment = new EditionsFragment();
                 break;
 
         }
@@ -155,10 +154,7 @@ public class MainActivity extends ActionBarActivity
         @Override
         public View onCreateView(LayoutInflater inflater, ViewGroup container,
                 Bundle savedInstanceState) {
-            View rootView = inflater.inflate(R.layout.facebook_lister_fragment, container, false);
-            TextView textView = (TextView) rootView.findViewById(R.id.section_label);
-            textView.setText(Integer.toString(getArguments().getInt(ARG_SECTION_NUMBER)));
-            return rootView;
+            return inflater.inflate(R.layout.fragment_facebook_feed, container, false);
         }
 
         @Override
